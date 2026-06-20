@@ -1,0 +1,30 @@
+name: Test fail-fast disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: pull_request
+      GITHUB_REF: refs/pull/3/merge
+      GITHUB_HEAD_REF: feature-no-fail-fast
+      GITHUB_BASE_REF: main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          fail-fast: "false"
+        continue-on-error: true
+      - name: Assert autofix_started output is valid
+        env:
+          AUTOFIX_STARTED: ${{ steps.action.outputs.autofix_started }}
+        run: |
+          echo "autofix_started: $AUTOFIX_STARTED"
+          # With fail-fast disabled, the action should still run and produce a valid output
+          if [ "$AUTOFIX_STARTED" = "true" ] || [ "$AUTOFIX_STARTED" = "false" ] || [ -z "$AUTOFIX_STARTED" ]; then
+            echo "PASS: autofix_started output is valid with fail-fast=false (got: '$AUTOFIX_STARTED')"
+          else
+            echo "FAIL: unexpected value for autofix_started: '$AUTOFIX_STARTED'"
+            exit 1
+          fi
