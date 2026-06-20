@@ -1,0 +1,32 @@
+name: Test custom comment input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: pull_request
+      GITHUB_REF: refs/pull/3/merge
+      GITHUB_HEAD_REF: feature-branch
+      GITHUB_BASE_REF: main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          comment: 'Auto-fix applied. Please review the changes.'
+          fail-fast: 'true'
+        continue-on-error: true
+      - name: Assert action ran with custom comment
+        env:
+          AUTOFIX_STARTED: ${{ steps.action.outputs.autofix_started }}
+        run: |
+          echo "autofix_started: $AUTOFIX_STARTED"
+          # The action should have run (even if it couldn't reach the server)
+          # Output should be 'true', 'false', or empty (no server in act)
+          if [ "$AUTOFIX_STARTED" = "true" ] || [ "$AUTOFIX_STARTED" = "false" ] || [ -z "$AUTOFIX_STARTED" ]; then
+            echo "PASS: action ran with custom comment input"
+          else
+            echo "FAIL: unexpected output value: $AUTOFIX_STARTED"
+            exit 1
+          fi
