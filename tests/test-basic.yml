@@ -1,0 +1,28 @@
+name: Test basic usage (default inputs)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: pull_request
+      GITHUB_REF: refs/pull/1/merge
+      GITHUB_HEAD_REF: feature-branch
+      GITHUB_BASE_REF: main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+      - name: Assert autofix_started output is present
+        env:
+          AUTOFIX_STARTED: ${{ steps.action.outputs.autofix_started }}
+        run: |
+          echo "autofix_started: $AUTOFIX_STARTED"
+          # The output should be defined (either 'true' or 'false')
+          # In a test environment without a real PR, it will be 'false'
+          if [ -z "$AUTOFIX_STARTED" ]; then
+            echo "FAIL: autofix_started output was not set"
+            exit 1
+          fi
+          echo "PASS: autofix_started=$AUTOFIX_STARTED"

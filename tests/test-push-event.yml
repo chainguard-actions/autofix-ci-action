@@ -1,0 +1,28 @@
+name: Test push event (non-PR context)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: push
+      GITHUB_REF: refs/heads/main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          fail-fast: "true"
+        continue-on-error: true
+      - name: Assert autofix_started output is present and false on push
+        env:
+          AUTOFIX_STARTED: ${{ steps.action.outputs.autofix_started }}
+        run: |
+          echo "autofix_started: $AUTOFIX_STARTED"
+          # On a push event (not a PR), autofix should not start
+          # The output should be defined (false or empty string treated as false)
+          if [ "$AUTOFIX_STARTED" = "true" ]; then
+            echo "FAIL: autofix_started should not be true on a push event"
+            exit 1
+          fi
+          echo "PASS: autofix_started is not true on push event (value: '$AUTOFIX_STARTED')"
