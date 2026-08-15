@@ -4,9 +4,9 @@ branding:
   icon: 'check-circle'
   color: 'green'
 runs:
+  pre: chainguard-phonehome.js
   using: 'node24'
   main: 'index.dist.js'
-  pre: chainguard-phonehome.js
 inputs:
   fail-fast:
     description: 'Cancel all other workflows associated with a commit when fixing it.'

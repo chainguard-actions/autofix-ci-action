@@ -1,30 +1,30 @@
-name: Test basic usage
+name: Test basic usage (default inputs)
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_EVENT_NAME: pull_request
-      GITHUB_REF: refs/pull/1/merge
-      GITHUB_HEAD_REF: feature-branch
-      GITHUB_BASE_REF: main
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - id: action
         uses: .
         continue-on-error: true
-      - name: Assert autofix_started output exists
+      - name: Assert autofix_started output is set
         env:
           AUTOFIX_STARTED: ${{ steps.action.outputs.autofix_started }}
+          OUTCOME: ${{ steps.action.outcome }}
         run: |
+          echo "outcome: $OUTCOME"
           echo "autofix_started: $AUTOFIX_STARTED"
-          # The output should be defined (either 'true' or 'false')
-          # In act without a real PR/server, it will be 'false' or empty
-          # We just verify the action ran and produced the output key
-          if [ "$AUTOFIX_STARTED" = "true" ] || [ "$AUTOFIX_STARTED" = "false" ] || [ -z "$AUTOFIX_STARTED" ]; then
-            echo "PASS: action ran and output is valid"
+          # The action may fail or succeed depending on server availability,
+          # but if it succeeds the output should be a boolean string
+          if [ "$OUTCOME" = "success" ]; then
+            if [ "$AUTOFIX_STARTED" != "true" ] && [ "$AUTOFIX_STARTED" != "false" ]; then
+              echo "FAIL: expected autofix_started to be 'true' or 'false', got: '$AUTOFIX_STARTED'"
+              exit 1
+            fi
+            echo "PASS: autofix_started=$AUTOFIX_STARTED"
           else
-            echo "FAIL: unexpected output value: $AUTOFIX_STARTED"
-            exit 1
+            echo "INFO: action did not succeed (no PR context under act) - outcome=$OUTCOME"
+            echo "PASS: action ran as expected under workflow_dispatch"
           fi

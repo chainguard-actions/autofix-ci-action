@@ -1,4 +1,4 @@
-name: Test fail-fast=false input
+name: Test custom commit-message and comment inputs
 on:
   workflow_dispatch:
 jobs:
@@ -10,8 +10,9 @@ jobs:
         uses: .
         continue-on-error: true
         with:
-          fail-fast: "false"
-      - name: Assert action ran with fail-fast=false
+          commit-message: "style: auto-fix formatting issues"
+          comment: "Autofix has applied formatting fixes to this PR."
+      - name: Assert action ran with custom inputs
         env:
           AUTOFIX_STARTED: ${{ steps.action.outputs.autofix_started }}
           OUTCOME: ${{ steps.action.outcome }}
@@ -25,8 +26,8 @@ jobs:
               echo "FAIL: expected autofix_started to be 'true' or 'false', got: '$AUTOFIX_STARTED'"
               exit 1
             fi
-            echo "PASS: autofix_started=$AUTOFIX_STARTED with fail-fast=false"
+            echo "PASS: autofix_started=$AUTOFIX_STARTED"
           else
             echo "INFO: action did not succeed (no PR context under act) - outcome=$OUTCOME"
-            echo "PASS: action accepted fail-fast=false and ran as expected"
+            echo "PASS: action accepted custom inputs and ran as expected"
           fi
