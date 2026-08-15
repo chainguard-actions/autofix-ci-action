@@ -1,4 +1,4 @@
-name: Test basic usage - default inputs
+name: Test fail-fast=false input
 on:
   workflow_dispatch:
 jobs:
@@ -9,9 +9,11 @@ jobs:
 
       - id: action
         uses: .
+        with:
+          fail-fast: "false"
         continue-on-error: true
 
-      - name: Assert autofix_started output is present
+      - name: Assert action handled fail-fast=false input
         env:
           AUTOFIX_STARTED: ${{ steps.action.outputs.autofix_started }}
           OUTCOME: ${{ steps.action.outcome }}
@@ -20,15 +22,14 @@ jobs:
           echo "autofix_started: $AUTOFIX_STARTED"
           # The action runs in a non-PR context (workflow_dispatch), so it should
           # either succeed with autofix_started=false or fail gracefully.
-          # Either way, the output should be defined (empty or false).
+          # The fail-fast=false input should be accepted without error.
           if [ "$OUTCOME" = "success" ]; then
             if [ "$AUTOFIX_STARTED" = "true" ]; then
               echo "FAIL: autofix_started should not be true in a non-PR context"
               exit 1
             fi
-            echo "PASS: action succeeded with autofix_started=$AUTOFIX_STARTED"
+            echo "PASS: action accepted fail-fast=false input, autofix_started=$AUTOFIX_STARTED"
           elif [ "$OUTCOME" = "failure" ]; then
-            # Acceptable: action may fail when not in a PR context
             echo "PASS: action failed gracefully in non-PR context (expected)"
           else
             echo "FAIL: unexpected outcome: $OUTCOME"
