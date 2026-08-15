@@ -1,4 +1,4 @@
-name: Test basic usage (default inputs)
+name: Test custom inputs (fail-fast disabled, custom message and comment)
 on:
   workflow_dispatch:
 jobs:
@@ -8,8 +8,12 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - id: action
         uses: .
+        with:
+          fail-fast: 'false'
+          commit-message: 'chore: auto-fix formatting issues'
+          comment: 'Autofix has applied formatting corrections to this PR.'
         continue-on-error: true
-      - name: Assert autofix_started output is set
+      - name: Assert action ran with custom inputs
         env:
           AUTOFIX_STARTED: ${{ steps.action.outputs.autofix_started }}
           OUTCOME: ${{ steps.action.outcome }}
@@ -26,5 +30,5 @@ jobs:
             echo "PASS: autofix_started=$AUTOFIX_STARTED"
           else
             echo "INFO: action did not succeed (expected outside PR context), outcome=$OUTCOME"
-            echo "PASS: action ran as expected"
+            echo "PASS: action ran as expected with custom inputs"
           fi
